@@ -1,5 +1,31 @@
 # Changelog
 
+## 0.2.0
+
+### Added
+
+- 增强 `SKILL.md`，支持解决方案型项目、多设备协同系统和“本体设备 + 上层应用”模式
+- 在方法层补充：
+  - 本体能力与上层系统边界规则
+  - 付费主体 / 场景优先级判断
+  - 人工接管与安全兜底要求
+- 新增核心模板：
+  - `SOLUTION_BRIEF.template.md`
+  - `SCENARIO_PLAYBOOK.template.md`
+- 升级现有模板，使其更适合无人装备、机器人、IoT、安防巡检等场景
+- 新增真实产业示例项目：
+  - `examples/example_unmanned_patrol_system/`
+
+### Changed
+
+- `README.md` 更新为更正式的包结构说明
+- `VERSION` 升级为 `0.2.0`
+- `PRD.template.md`、`DESIGN.template.md`、`04_ai_solution_design.template.md` 增加解决方案型项目所需字段
+
+### Notes
+
+- `0.2.0` 开始，这个 Skill 不再只是偏通用 AI 产品，也开始面向多设备协同和行业解决方案型产品。
+
 ## 0.1.0
 
 ### Added

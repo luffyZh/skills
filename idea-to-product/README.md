@@ -6,7 +6,7 @@
 
 ## 版本信息
 
-- 当前版本：`0.1.0`
+- 当前版本：`0.2.0`
 - 发布状态：`draft`
 - 主入口文件：`SKILL.md`
 
@@ -29,7 +29,7 @@ idea-to-product/
 ├── VERSION
 ├── examples/
 │   ├── README.md
-│   └── example_ai_meeting_copilot/
+│   ├── example_ai_meeting_copilot/
 │       ├── 01_opportunity_brief.md
 │       ├── 02_problem_space.md
 │       ├── 03_product_definition.md
@@ -40,6 +40,19 @@ idea-to-product/
 │       ├── PITCH_DECK.md
 │       ├── PRD.md
 │       └── README.md
+│   └── example_unmanned_patrol_system/
+│       ├── 01_opportunity_brief.md
+│       ├── 02_problem_space.md
+│       ├── 03_product_definition.md
+│       ├── 04_ai_solution_design.md
+│       ├── AGENTS.md
+│       ├── DESIGN.md
+│       ├── MVP_PLAN.md
+│       ├── PITCH_DECK.md
+│       ├── PRD.md
+│       ├── README.md
+│       ├── SCENARIO_PLAYBOOK.md
+│       └── SOLUTION_BRIEF.md
 └── templates/
     ├── README.md
     ├── docs/
@@ -48,7 +61,9 @@ idea-to-product/
     │   ├── DESIGN.template.md
     │   ├── MVP_PLAN.template.md
     │   ├── PITCH_DECK.template.md
-    │   └── PRD.template.md
+    │   ├── PRD.template.md
+    │   ├── SCENARIO_PLAYBOOK.template.md
+    │   └── SOLUTION_BRIEF.template.md
     └── phase/
         ├── README.md
         ├── 01_opportunity_brief.template.md
@@ -172,6 +187,26 @@ idea-to-product/
 
 用于组织汇报材料结构，可进一步生成 PPT 或 HTML 汇报页。
 
+#### `SOLUTION_BRIEF.template.md`
+
+用于定义解决方案型产品中的：
+
+- 本体设备边界
+- 上层系统边界
+- 行业切入点
+- 系统价值主张
+- 交付方式
+
+#### `SCENARIO_PLAYBOOK.template.md`
+
+用于定义复杂现场场景中的：
+
+- 事件触发条件
+- 设备协同流程
+- 人工介入节点
+- 告警与处置闭环
+- 安全兜底策略
+
 ---
 
 ## PRD 与机会分析文档的边界
@@ -235,6 +270,8 @@ idea-to-product/
 - `DESIGN.template.md`
 - `MVP_PLAN.template.md`
 - `PITCH_DECK.template.md`
+- `SOLUTION_BRIEF.template.md`
+- `SCENARIO_PLAYBOOK.template.md`
 
 ---
 
@@ -254,6 +291,8 @@ idea-to-product/
 - `templates/docs/DESIGN.template.md`
 - `templates/docs/MVP_PLAN.template.md`
 - `templates/docs/PITCH_DECK.template.md`
+- `templates/docs/SOLUTION_BRIEF.template.md`
+- `templates/docs/SCENARIO_PLAYBOOK.template.md`
 
 ---
 
@@ -270,11 +309,13 @@ idea-to-product/
 
 - `phase/`：阶段性分析与判断模板
 - `docs/`：执行型和表达型核心文档模板
+- 对于解决方案型项目，优先补充 `SOLUTION_BRIEF` 与 `SCENARIO_PLAYBOOK`
 
 ### `examples/`
 
 - 放置完整示例项目
 - 用于展示模板如何落地成真实文档
+- 当前包含通用 AI 产品示例和无人装备协同巡航示例
 
 ### 命名约定
 
