@@ -6,7 +6,7 @@
 
 ## 版本信息
 
-- 当前版本：`0.2.0`
+- 当前版本：`0.3.0`
 - 发布状态：`draft`
 - 主入口文件：`SKILL.md`
 
@@ -46,18 +46,24 @@ idea-to-product/
 │       ├── 03_product_definition.md
 │       ├── 04_ai_solution_design.md
 │       ├── AGENTS.md
+│       ├── DEMO_PROTOTYPE_SPEC.md
 │       ├── DESIGN.md
+│       ├── HTML_BRIEFING_DRAFT.md
 │       ├── MVP_PLAN.md
 │       ├── PITCH_DECK.md
+│       ├── PPT_BRIEFING_DRAFT.md
 │       ├── PRD.md
 │       ├── README.md
 │       ├── SCENARIO_PLAYBOOK.md
-│       └── SOLUTION_BRIEF.md
+│       ├── SOLUTION_BRIEF.md
+│       ├── demo-prototype.html
+│       └── unmanned_patrol_briefing.html
 └── templates/
     ├── README.md
     ├── docs/
     │   ├── README.md
     │   ├── AGENTS.template.md
+    │   ├── DEMO_PROTOTYPE_SPEC.template.md
     │   ├── DESIGN.template.md
     │   ├── MVP_PLAN.template.md
     │   ├── PITCH_DECK.template.md
@@ -187,6 +193,17 @@ idea-to-product/
 
 用于组织汇报材料结构，可进一步生成 PPT 或 HTML 汇报页。
 
+#### `DEMO_PROTOTYPE_SPEC.template.md`
+
+用于定义 MVP 阶段的 Demo 原型系统，包括：
+
+- 核心页面
+- 页面模块
+- 关键交互
+- 状态流转
+- 假数据
+- 演示路径
+
 #### `SOLUTION_BRIEF.template.md`
 
 用于定义解决方案型产品中的：
@@ -242,6 +259,43 @@ idea-to-product/
 
 ---
 
+## 阶段6 与 阶段7 的区别
+
+从 `0.3.0` 开始，这一条规则被明确固定：
+
+### 阶段6：MVP Demo
+
+标准产物：
+
+- `DEMO_PROTOTYPE_SPEC.md`
+- `demo-prototype.html`
+
+这类产物代表：
+
+- 原型系统
+- 交互流程
+- 业务链路演示
+
+### 阶段7：汇报材料
+
+标准产物：
+
+- `PITCH_DECK.md`
+- `PPT_BRIEFING_DRAFT.md`
+- `HTML_BRIEFING_DRAFT.md`
+- `briefing.html` 或同类正式汇报页面
+
+这类产物代表：
+
+- 汇报叙事
+- 方案表达
+- 商业与产品价值展示
+
+### 最关键的区分
+
+- `demo-prototype.html` 是“演系统”
+- `HTML_BRIEFING_DRAFT.md` / `briefing.html` 是“讲方案”
+
 ## 建议使用方式
 
 ### 方式一：按阶段推进
@@ -272,6 +326,7 @@ idea-to-product/
 - `PITCH_DECK.template.md`
 - `SOLUTION_BRIEF.template.md`
 - `SCENARIO_PLAYBOOK.template.md`
+- `DEMO_PROTOTYPE_SPEC.template.md`
 
 ---
 
@@ -293,6 +348,7 @@ idea-to-product/
 - `templates/docs/PITCH_DECK.template.md`
 - `templates/docs/SOLUTION_BRIEF.template.md`
 - `templates/docs/SCENARIO_PLAYBOOK.template.md`
+- `templates/docs/DEMO_PROTOTYPE_SPEC.template.md`
 
 ---
 
@@ -310,6 +366,7 @@ idea-to-product/
 - `phase/`：阶段性分析与判断模板
 - `docs/`：执行型和表达型核心文档模板
 - 对于解决方案型项目，优先补充 `SOLUTION_BRIEF` 与 `SCENARIO_PLAYBOOK`
+- 对于需要做原型系统的项目，补充 `DEMO_PROTOTYPE_SPEC`
 
 ### `examples/`
 
@@ -322,6 +379,8 @@ idea-to-product/
 - 阶段文档采用数字前缀，如 `01_`、`02_`
 - 通用模板采用 `*.template.md`
 - 项目实例文档使用正式文件名，如 `PRD.md`、`AGENTS.md`
+- `prototype` / `demo` 只用于阶段6原型系统
+- `briefing` / `pitch` 只用于阶段7汇报材料
 
 ---
 

@@ -1,8 +1,7 @@
 ---
 name: idea-to-product
 description: 将一个初步想法、技术方案、能力原型或项目线索，按 7 阶段流程推进为产品机会判断、产品定义、AI 方案设计、关键文档、MVP Demo 规划与汇报材料的总控型 Skill。
-version: 0.2.0
-status: draft
+version: 0.3.0
 ---
 
 # idea-to-product
@@ -26,7 +25,7 @@ status: draft
 - 用户基于成熟硬件或设备本体，开发算法层、调度层或上层应用系统
 - 用户在做多设备协同、多角色联动或行业解决方案型产品
 - 用户希望从“思路”逐步推进到 `PRD.md`、`AGENTS.md`、`DESIGN.md`、`PITCH_DECK.md`
-- 用户希望最终生成 Demo 方案、PPT 或 HTML 汇报材料
+- 用户希望最终生成 Demo 原型系统或 PPT / HTML 汇报材料
 
 不适用于以下情况：
 
@@ -180,8 +179,9 @@ status: draft
 - 默认从阶段1开始
 - 默认优先收敛 MVP，而不是扩展完整产品
 - 默认优先产出结构化 Markdown 文档
-- 默认将 `PRD.md`、`AGENTS.md`、`DESIGN.md`、`PITCH_DECK.md` 视为核心交付物
+- 默认将 `PRD.md`、`AGENTS.md`、`DESIGN.md`、`MVP_PLAN.md`、`PITCH_DECK.md` 视为核心交付物
 - 对于解决方案型项目，默认补充 `SOLUTION_BRIEF.md` 与 `SCENARIO_PLAYBOOK.md`
+- 默认将 Demo 原型与汇报材料视为两类不同产物，不混用命名
 - 默认将汇报材料先输出为内容大纲或文稿，再进入 PPT / HTML 生成
 - 默认优先给出判断、边界、风险和下一步，而不是直接给满量功能列表
 
@@ -404,6 +404,9 @@ status: draft
 - `OPPORTUNITY_BRIEF.md`
 - `MVP_PLAN.md`
 - `USER_FLOW.md`
+- `SOLUTION_BRIEF.md`
+- `SCENARIO_PLAYBOOK.md`
+- `DEMO_PROTOTYPE_SPEC.md`
 
 ### 你需要完成
 
@@ -450,6 +453,8 @@ status: draft
 - 功能优先级
 - 原型实现清单
 - 演示建议
+- `DEMO_PROTOTYPE_SPEC.md`
+- `demo-prototype.html` 或同等原型实现文件
 
 ### 进入下一阶段的条件
 
@@ -488,6 +493,8 @@ status: draft
 - 页面 / 章节大纲
 - 每部分核心信息
 - 汇报草稿
+- `PPT_BRIEFING_DRAFT.md`
+- `HTML_BRIEFING_DRAFT.md`
 
 ### 完成标准
 
@@ -818,12 +825,66 @@ status: draft
 - `PITCH_DECK.md`：`templates/docs/PITCH_DECK.template.md`
 - `SOLUTION_BRIEF.md`：`templates/docs/SOLUTION_BRIEF.template.md`
 - `SCENARIO_PLAYBOOK.md`：`templates/docs/SCENARIO_PLAYBOOK.template.md`
+- `DEMO_PROTOTYPE_SPEC.md`：`templates/docs/DEMO_PROTOTYPE_SPEC.template.md`
 
 ### 关于市场规模与竞品分析的处理规则
 
 - 完整版市场规模、竞品格局、替代方案、切入机会，应优先沉淀在阶段1文档 `01_opportunity_brief.md`
 - `PRD.md` 中应保留“机会摘要”或“市场与竞品摘要”简版章节，用于说明产品为何值得做
 - `PRD.md` 不应承载冗长的全量市场研究正文，而应引用前置分析结论并服务于产品定义和执行
+
+---
+
+## 产物命名规范
+
+为避免混淆，阶段产物命名统一如下：
+
+### 阶段1-4：分析与定义文档
+
+- `01_opportunity_brief.md`
+- `02_problem_space.md`
+- `03_product_definition.md`
+- `04_ai_solution_design.md`
+
+### 阶段5：核心执行文档
+
+- `PRD.md`
+- `AGENTS.md`
+- `DESIGN.md`
+- `MVP_PLAN.md`
+- `PITCH_DECK.md`
+- `SOLUTION_BRIEF.md`
+- `SCENARIO_PLAYBOOK.md`
+- `DEMO_PROTOTYPE_SPEC.md`
+
+### 阶段6：MVP Demo 原型产物
+
+- `DEMO_PROTOTYPE_SPEC.md`
+- `demo-prototype.html`
+- 如有需要，可扩展为 `demo-prototype-v1.html`、`demo-prototype-mobile.html`
+
+说明：
+
+- 阶段6的 HTML 一律指“Demo 原型系统”
+- 阶段6不使用 `briefing`、`pitch` 等命名
+
+### 阶段7：汇报材料产物
+
+- `PITCH_DECK.md`
+- `PPT_BRIEFING_DRAFT.md`
+- `HTML_BRIEFING_DRAFT.md`
+- 后续正式输出可命名为 `briefing.html`、`pitch.html`、`final-deck.pptx`
+
+说明：
+
+- 阶段7的 HTML 一律指“汇报材料”
+- 阶段7不使用 `prototype`、`demo-system` 等命名
+
+### 命名原则
+
+1. `prototype` / `demo` 只用于阶段6
+2. `briefing` / `pitch` 只用于阶段7
+3. `PRD`、`DESIGN`、`AGENTS` 属于中间执行文档，不等同于最终展示物
 
 ---
 
@@ -926,6 +987,18 @@ status: draft
 - 可延后功能
 - 演示主线
 - 实现优先级
+
+### `DEMO_PROTOTYPE_SPEC.md`
+
+至少包含：
+
+- 原型目标
+- 核心页面列表
+- 页面模块说明
+- 关键交互流
+- 假数据与状态流转
+- 哪些能力是真实现，哪些是模拟
+- 演示入口与操作路径
 
 ---
 
@@ -1035,6 +1108,9 @@ status: draft
 - `PITCH_DECK.md`
 - `SOLUTION_BRIEF.md`
 - `SCENARIO_PLAYBOOK.md`
+- `DEMO_PROTOTYPE_SPEC.md`
+- `PPT_BRIEFING_DRAFT.md`
+- `HTML_BRIEFING_DRAFT.md`
 - `SOLUTION_BRIEF.md`
 - `SCENARIO_PLAYBOOK.md`
 

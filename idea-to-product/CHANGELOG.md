@@ -1,5 +1,26 @@
 # Changelog
 
+## 0.3.0
+
+### Added
+
+- 新增 `DEMO_PROTOTYPE_SPEC.template.md`
+- 明确阶段6与阶段7的产物命名规范
+- 固化 `demo-prototype.html` 与 `HTML_BRIEFING_DRAFT.md` 的职责边界
+
+### Changed
+
+- `SKILL.md` 升级到 `0.3.0`
+- `README.md` 补充 Demo 原型系统与汇报材料的区分说明
+- `templates/docs/README.md` 增加命名约束与 Demo 原型模板说明
+
+### Notes
+
+- 从 `0.3.0` 开始：
+  - 阶段6的 HTML 默认指 Demo 原型系统
+  - 阶段7的 HTML 默认指汇报材料
+  - 不再混用 `prototype` 与 `briefing` 命名
+
 ## 0.2.0
 
 ### Added
