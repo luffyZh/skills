@@ -1,0 +1,1520 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>无人装备 AI 巡航系统 · Demo Prototype</title>
+  <style>
+    :root {
+      --bg: #061019;
+      --bg-2: #081621;
+      --panel: rgba(10, 20, 31, 0.9);
+      --panel-soft: rgba(11, 24, 36, 0.74);
+      --line: rgba(113, 190, 209, 0.14);
+      --line-strong: rgba(107, 232, 255, 0.35);
+      --text: #e9f1f4;
+      --muted: #8ca2ae;
+      --cyan: #67e8f9;
+      --blue: #4da7ff;
+      --green: #78f7b5;
+      --amber: #ffd56a;
+      --red: #ff7b7b;
+      --shadow: 0 28px 90px rgba(0, 0, 0, 0.45);
+      --radius: 24px;
+      --mono: "IBM Plex Mono", "JetBrains Mono", monospace;
+      --sans: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      height: 100vh;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 12% 20%, rgba(77, 167, 255, 0.14), transparent 26%),
+        radial-gradient(circle at 86% 16%, rgba(103, 232, 249, 0.12), transparent 22%),
+        radial-gradient(circle at 50% 100%, rgba(120, 247, 181, 0.08), transparent 36%),
+        linear-gradient(180deg, #061019 0%, #07131d 45%, #08131c 100%);
+      font-family: var(--sans);
+      overflow: hidden;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background-image:
+        linear-gradient(rgba(113, 190, 209, 0.045) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(113, 190, 209, 0.045) 1px, transparent 1px);
+      background-size: 36px 36px;
+      mask-image: radial-gradient(circle at center, black 42%, transparent 100%);
+      opacity: 0.65;
+    }
+
+    button {
+      font: inherit;
+      cursor: pointer;
+    }
+
+    .app {
+      position: relative;
+      z-index: 1;
+      padding: 18px;
+      height: 100vh;
+    }
+
+    .shell {
+      height: calc(100vh - 36px);
+      border: 1px solid rgba(113, 190, 209, 0.12);
+      border-radius: 28px;
+      background: linear-gradient(180deg, rgba(7, 17, 27, 0.84), rgba(7, 15, 24, 0.92));
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      backdrop-filter: blur(18px);
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      padding: 16px 22px;
+      border-bottom: 1px solid rgba(113, 190, 209, 0.1);
+      background: linear-gradient(180deg, rgba(9, 17, 26, 0.96), rgba(9, 17, 26, 0.66));
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .brand-mark {
+      width: 46px;
+      height: 46px;
+      border-radius: 16px;
+      display: grid;
+      place-items: center;
+      border: 1px solid rgba(103, 232, 249, 0.32);
+      background:
+        radial-gradient(circle at 50% 50%, rgba(103, 232, 249, 0.22), transparent 48%),
+        linear-gradient(135deg, rgba(11, 30, 45, 0.92), rgba(7, 17, 27, 0.96));
+      box-shadow: inset 0 0 18px rgba(103, 232, 249, 0.12);
+      color: var(--cyan);
+      font-family: var(--mono);
+      font-size: 14px;
+      letter-spacing: 0.1em;
+    }
+
+    .brand h1 {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .brand p {
+      margin: 2px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .status-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: flex-end;
+    }
+
+    .status-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(113, 190, 209, 0.14);
+      background: rgba(255, 255, 255, 0.035);
+      color: #d9e7ec;
+      font-size: 12px;
+      font-family: var(--mono);
+      letter-spacing: 0.03em;
+    }
+
+    .dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 999px;
+      display: inline-block;
+      box-shadow: 0 0 16px currentColor;
+    }
+
+    .cyan { color: var(--cyan); background: var(--cyan); }
+    .green { color: var(--green); background: var(--green); }
+    .amber { color: var(--amber); background: var(--amber); }
+    .red { color: var(--red); background: var(--red); }
+
+    .main {
+      display: grid;
+      grid-template-columns: 320px 1fr 360px;
+      height: calc(100% - 188px);
+    }
+
+    .sidebar,
+    .control {
+      padding: 18px;
+      background: rgba(8, 15, 24, 0.56);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .sidebar {
+      border-right: 1px solid rgba(113, 190, 209, 0.1);
+    }
+
+    .control {
+      border-left: 1px solid rgba(113, 190, 209, 0.1);
+    }
+
+    .panel {
+      position: relative;
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      background: linear-gradient(180deg, rgba(10, 20, 31, 0.92), rgba(8, 15, 24, 0.98));
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      margin-bottom: 0;
+    }
+
+    .panel::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background: linear-gradient(135deg, rgba(103, 232, 249, 0.07), transparent 34%, transparent 70%, rgba(120, 247, 181, 0.05));
+    }
+
+    .panel-body {
+      position: relative;
+      z-index: 1;
+      padding: 18px;
+    }
+
+    .panel-label {
+      color: var(--muted);
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      font-family: var(--mono);
+      margin-bottom: 10px;
+    }
+
+    .panel-title {
+      margin: 0 0 12px;
+      font-size: 22px;
+      line-height: 1.15;
+    }
+
+    .subtle {
+      color: #c4d4db;
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    .list {
+      display: grid;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .list-item {
+      padding: 12px 14px;
+      border-radius: 16px;
+      border: 1px solid rgba(113, 190, 209, 0.08);
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .list-item strong {
+      display: block;
+      margin-bottom: 4px;
+      font-size: 14px;
+    }
+
+    .list-item span {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .button-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 0;
+    }
+
+    .btn {
+      border: 1px solid rgba(113, 190, 209, 0.16);
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--text);
+      padding: 12px 14px;
+      border-radius: 14px;
+      transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+    }
+
+    .btn:hover {
+      transform: translateY(-1px);
+      border-color: rgba(103, 232, 249, 0.32);
+      background: rgba(103, 232, 249, 0.08);
+    }
+
+    .btn.primary {
+      background: linear-gradient(180deg, rgba(103, 232, 249, 0.16), rgba(77, 167, 255, 0.08));
+      border-color: rgba(103, 232, 249, 0.34);
+      color: #ecfeff;
+    }
+
+    .btn.warn {
+      border-color: rgba(255, 213, 106, 0.22);
+      background: rgba(255, 213, 106, 0.08);
+    }
+
+    .btn.danger {
+      border-color: rgba(255, 123, 123, 0.24);
+      background: rgba(255, 123, 123, 0.08);
+    }
+
+    .map-stage {
+      position: relative;
+      padding: 18px;
+      height: 100%;
+      background:
+        radial-gradient(circle at 50% 50%, rgba(103, 232, 249, 0.06), transparent 34%),
+        linear-gradient(180deg, rgba(9, 17, 26, 0.78), rgba(8, 16, 25, 0.96));
+    }
+
+    .map-shell {
+      position: relative;
+      height: 100%;
+      border: 1px solid rgba(113, 190, 209, 0.12);
+      border-radius: 28px;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 55% 42%, rgba(77, 167, 255, 0.08), transparent 30%),
+        linear-gradient(rgba(113, 190, 209, 0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(113, 190, 209, 0.04) 1px, transparent 1px),
+        linear-gradient(180deg, rgba(10, 21, 32, 0.98), rgba(7, 14, 22, 1));
+      background-size: auto, 44px 44px, 44px 44px, auto;
+      box-shadow: inset 0 0 80px rgba(0, 0, 0, 0.34);
+    }
+
+    .map-shell::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(circle at 14% 22%, rgba(103, 232, 249, 0.08), transparent 18%),
+        radial-gradient(circle at 78% 28%, rgba(77, 167, 255, 0.08), transparent 16%),
+        radial-gradient(circle at 58% 70%, rgba(120, 247, 181, 0.06), transparent 18%);
+    }
+
+    .map-toolbar {
+      position: absolute;
+      top: 16px;
+      left: 16px;
+      right: 16px;
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      z-index: 5;
+    }
+
+    .map-chip-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .map-chip {
+      padding: 8px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(113, 190, 209, 0.16);
+      background: rgba(7, 16, 25, 0.84);
+      color: #d5e3e8;
+      font-size: 12px;
+      font-family: var(--mono);
+    }
+
+    .zone {
+      position: absolute;
+      border: 1px solid rgba(103, 232, 249, 0.18);
+      background: rgba(255, 255, 255, 0.025);
+      border-radius: 24px;
+      backdrop-filter: blur(2px);
+    }
+
+    .zone::after {
+      content: attr(data-label);
+      position: absolute;
+      left: 14px;
+      top: 12px;
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .zone.hot {
+      border-color: rgba(255, 123, 123, 0.26);
+      box-shadow: inset 0 0 28px rgba(255, 123, 123, 0.08), 0 0 22px rgba(255, 123, 123, 0.08);
+    }
+
+    .zone.hot::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      background: radial-gradient(circle at 62% 32%, rgba(255, 123, 123, 0.12), transparent 42%);
+    }
+
+    .zone-a { left: 8%; top: 16%; width: 27%; height: 23%; }
+    .zone-b { left: 45%; top: 18%; width: 28%; height: 18%; }
+    .zone-c { left: 24%; top: 58%; width: 20%; height: 20%; }
+    .zone-d { left: 62%; top: 54%; width: 24%; height: 22%; }
+
+    .map-paths,
+    .map-overlay {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+
+    .path-base {
+      opacity: 0.34;
+      stroke-dasharray: 12 10;
+    }
+
+    .drone,
+    .dog,
+    .incident {
+      position: absolute;
+      transform: translate(-50%, -50%);
+      transition: left 1.25s ease, top 1.25s ease, opacity 0.45s ease;
+      z-index: 3;
+    }
+
+    .device-label {
+      position: absolute;
+      transform: translate(-50%, calc(-100% - 14px));
+      padding: 8px 10px;
+      border-radius: 12px;
+      border: 1px solid rgba(113, 190, 209, 0.14);
+      background: rgba(7, 16, 25, 0.92);
+      color: #dbebf0;
+      font-size: 11px;
+      line-height: 1.4;
+      font-family: var(--mono);
+      white-space: nowrap;
+      opacity: 0.95;
+      box-shadow: 0 10px 24px rgba(0, 0, 0, 0.28);
+    }
+
+    .device-label.hidden {
+      display: none;
+    }
+
+    .drone {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 50% 40%, rgba(103, 232, 249, 0.92), rgba(103, 232, 249, 0.18) 62%, transparent 63%);
+      box-shadow: 0 0 24px rgba(103, 232, 249, 0.38);
+    }
+
+    .drone::after {
+      content: "";
+      position: absolute;
+      inset: 6px;
+      border: 1px solid rgba(103, 232, 249, 0.7);
+      border-radius: 50%;
+    }
+
+    .dog {
+      width: 24px;
+      height: 16px;
+      border-radius: 8px;
+      background: linear-gradient(180deg, rgba(120, 247, 181, 0.98), rgba(120, 247, 181, 0.5));
+      box-shadow: 0 0 20px rgba(120, 247, 181, 0.32);
+    }
+
+    .dog::before,
+    .dog::after {
+      content: "";
+      position: absolute;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: rgba(120, 247, 181, 0.9);
+      bottom: -4px;
+    }
+
+    .dog::before { left: 3px; }
+    .dog::after { right: 3px; }
+
+    .incident {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--red);
+      box-shadow: 0 0 18px rgba(255, 123, 123, 0.48);
+      opacity: 0;
+    }
+
+    .target-box {
+      position: absolute;
+      width: 78px;
+      height: 92px;
+      border-radius: 16px;
+      border: 2px solid rgba(255, 123, 123, 0.78);
+      box-shadow: 0 0 22px rgba(255, 123, 123, 0.24);
+      transform: translate(-50%, -50%);
+      opacity: 0;
+      transition: opacity 0.35s ease;
+    }
+
+    .target-box::before,
+    .target-box::after {
+      content: "";
+      position: absolute;
+      width: 14px;
+      height: 14px;
+      border-top: 2px solid rgba(255, 183, 183, 0.9);
+      border-left: 2px solid rgba(255, 183, 183, 0.9);
+    }
+
+    .target-box::before {
+      top: -2px;
+      left: -2px;
+    }
+
+    .target-box::after {
+      right: -2px;
+      bottom: -2px;
+      transform: rotate(180deg);
+    }
+
+    .target-tag {
+      position: absolute;
+      top: -34px;
+      left: 0;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(255, 123, 123, 0.16);
+      border: 1px solid rgba(255, 123, 123, 0.4);
+      color: #ffe3e3;
+      font-size: 10px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      font-family: var(--mono);
+      white-space: nowrap;
+    }
+
+    .incident::before,
+    .incident::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      border: 1px solid rgba(255, 123, 123, 0.4);
+      animation: pulse 2.2s infinite;
+    }
+
+    .incident::after {
+      animation-delay: 0.7s;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(1); opacity: 0.7; }
+      100% { transform: scale(3.4); opacity: 0; }
+    }
+
+    .map-legend {
+      position: absolute;
+      right: 18px;
+      bottom: 18px;
+      display: grid;
+      gap: 8px;
+      padding: 14px 16px;
+      border-radius: 18px;
+      background: rgba(7, 16, 25, 0.88);
+      border: 1px solid rgba(113, 190, 209, 0.12);
+      z-index: 5;
+      font-size: 12px;
+      font-family: var(--mono);
+      color: #d9e7ec;
+    }
+
+    .map-floating-card {
+      position: absolute;
+      left: 18px;
+      bottom: 18px;
+      z-index: 5;
+      width: 280px;
+      padding: 14px 16px;
+      border-radius: 18px;
+      border: 1px solid rgba(113, 190, 209, 0.12);
+      background: rgba(7, 16, 25, 0.9);
+      box-shadow: 0 20px 36px rgba(0, 0, 0, 0.28);
+    }
+
+    .map-floating-card strong {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 14px;
+    }
+
+    .map-floating-card span {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .legend-mark {
+      width: 12px;
+      height: 12px;
+      border-radius: 999px;
+      display: inline-block;
+    }
+
+    .event-card {
+      padding: 16px;
+      border-radius: 18px;
+      border: 1px solid rgba(113, 190, 209, 0.1);
+      background: rgba(255, 255, 255, 0.03);
+      margin-bottom: 12px;
+    }
+
+    .event-card h4 {
+      margin: 0 0 8px;
+      font-size: 17px;
+      line-height: 1.2;
+    }
+
+    .event-meta {
+      display: grid;
+      gap: 6px;
+      color: #c8d7dd;
+      font-size: 13px;
+    }
+
+    .event-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-family: var(--mono);
+      width: fit-content;
+      margin-bottom: 10px;
+    }
+
+    .badge-low {
+      background: rgba(120, 247, 181, 0.08);
+      border: 1px solid rgba(120, 247, 181, 0.24);
+      color: #dfffee;
+    }
+
+    .badge-mid {
+      background: rgba(255, 213, 106, 0.08);
+      border: 1px solid rgba(255, 213, 106, 0.24);
+      color: #fff5d1;
+    }
+
+    .badge-high {
+      background: rgba(255, 123, 123, 0.1);
+      border: 1px solid rgba(255, 123, 123, 0.28);
+      color: #ffe0e0;
+    }
+
+    .device-status {
+      display: grid;
+      gap: 10px;
+      overflow: auto;
+      padding-right: 2px;
+    }
+
+    .device-item {
+      display: grid;
+      grid-template-columns: 56px 1fr auto;
+      gap: 12px;
+      padding: 12px;
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(113, 190, 209, 0.08);
+      align-items: center;
+    }
+
+    .device-item[data-active="true"] {
+      border-color: rgba(103, 232, 249, 0.26);
+      background: rgba(103, 232, 249, 0.06);
+      box-shadow: inset 0 0 0 1px rgba(103, 232, 249, 0.08);
+    }
+
+    .device-thumb {
+      width: 56px;
+      height: 56px;
+      border-radius: 16px;
+      border: 1px solid rgba(113, 190, 209, 0.12);
+      background:
+        radial-gradient(circle at 50% 40%, rgba(103, 232, 249, 0.12), transparent 48%),
+        linear-gradient(180deg, rgba(16, 33, 48, 0.95), rgba(9, 18, 28, 0.95));
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .device-thumb svg {
+      width: 34px;
+      height: 34px;
+    }
+
+    .device-name strong {
+      display: block;
+      font-size: 14px;
+    }
+
+    .device-name span {
+      font-size: 12px;
+      color: var(--muted);
+      display: block;
+      line-height: 1.5;
+    }
+
+    .device-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 6px;
+    }
+
+    .meta-pill {
+      padding: 4px 8px;
+      border-radius: 999px;
+      border: 1px solid rgba(113, 190, 209, 0.1);
+      background: rgba(255, 255, 255, 0.035);
+      color: #d8e6eb;
+      font-size: 10px;
+      font-family: var(--mono);
+    }
+
+    .device-pill {
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-family: var(--mono);
+      border: 1px solid rgba(113, 190, 209, 0.14);
+      color: #deedf2;
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    .status-online {
+      color: #defdef;
+      border-color: rgba(120, 247, 181, 0.24);
+      background: rgba(120, 247, 181, 0.08);
+    }
+
+    .status-busy {
+      color: #fff5dc;
+      border-color: rgba(255, 213, 106, 0.24);
+      background: rgba(255, 213, 106, 0.08);
+    }
+
+    .status-alert {
+      color: #ffe4e4;
+      border-color: rgba(255, 123, 123, 0.28);
+      background: rgba(255, 123, 123, 0.1);
+    }
+
+    .device-tools {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .radio-group {
+      display: inline-flex;
+      gap: 6px;
+      padding: 4px;
+      border-radius: 999px;
+      border: 1px solid rgba(113, 190, 209, 0.12);
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .radio-btn {
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      font-size: 12px;
+      font-family: var(--mono);
+      padding: 8px 12px;
+      border-radius: 999px;
+    }
+
+    .radio-btn.active {
+      color: var(--text);
+      background: rgba(103, 232, 249, 0.12);
+      box-shadow: inset 0 0 0 1px rgba(103, 232, 249, 0.18);
+    }
+
+    .sidebar .panel:first-child {
+      flex: 0 0 200px;
+    }
+
+    .sidebar .panel:last-child {
+      flex: 1 1 auto;
+      min-height: 0;
+    }
+
+    .control .panel {
+      flex: 1 1 auto;
+      min-height: 0;
+    }
+
+    .timeline-wrap {
+      padding: 0 18px 18px;
+      height: 88px;
+      background: rgba(8, 15, 24, 0.56);
+      border-top: 1px solid rgba(113, 190, 209, 0.1);
+      overflow: hidden;
+    }
+
+    .timeline {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: 10px;
+      padding-top: 10px;
+    }
+
+    .step {
+      padding: 10px 12px;
+      border-radius: 18px;
+      border: 1px solid rgba(113, 190, 209, 0.08);
+      background: rgba(255, 255, 255, 0.03);
+      transition: border-color 0.25s ease, background 0.25s ease, transform 0.25s ease;
+    }
+
+    .step.active {
+      border-color: rgba(103, 232, 249, 0.32);
+      background: rgba(103, 232, 249, 0.09);
+      transform: translateY(-2px);
+    }
+
+    .step.done {
+      border-color: rgba(120, 247, 181, 0.22);
+      background: rgba(120, 247, 181, 0.07);
+    }
+
+    .step-index {
+      color: var(--muted);
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      font-family: var(--mono);
+      margin-bottom: 8px;
+    }
+
+    .step strong {
+      display: block;
+      margin-bottom: 4px;
+      font-size: 14px;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    @media (max-width: 1360px) {
+      .main {
+        grid-template-columns: 290px 1fr 330px;
+      }
+    }
+
+    @media (max-width: 1180px) {
+      .main {
+        grid-template-columns: 1fr;
+        height: auto;
+      }
+
+      .sidebar {
+        border-right: none;
+        border-bottom: 1px solid rgba(113, 190, 209, 0.1);
+      }
+
+      .control {
+        border-left: none;
+        border-top: 1px solid rgba(113, 190, 209, 0.1);
+      }
+
+      .timeline {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 760px) {
+      .topbar {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .status-bar {
+        justify-content: flex-start;
+      }
+
+      .button-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .timeline {
+        grid-template-columns: 1fr;
+      }
+
+      .map-stage {
+        padding: 12px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="shell">
+      <header class="topbar">
+        <div class="brand">
+          <div class="brand-mark">UAS</div>
+          <div>
+            <h1>无人装备 AI 巡航系统 · Demo Prototype</h1>
+            <p>园区重点区域巡航监控 · 无人机发现 / 机器狗复核 / 中控确认</p>
+          </div>
+        </div>
+        <div class="status-bar">
+          <div class="status-chip"><span class="dot cyan"></span><span id="topMission">任务状态：待命</span></div>
+          <div class="status-chip"><span class="dot amber"></span><span id="topRisk">风险等级：低风险</span></div>
+          <div class="status-chip"><span class="dot green"></span>在线设备：10</div>
+        </div>
+      </header>
+
+      <section class="main">
+        <aside class="sidebar">
+          <div class="panel">
+            <div class="panel-body">
+              <div class="panel-label">Mission</div>
+              <h2 class="panel-title">巡航任务</h2>
+              <div class="button-grid">
+                <button class="btn primary" id="btnStart">开始巡航</button>
+                <button class="btn" id="btnAlert">模拟异常目标</button>
+                <button class="btn warn" id="btnDispatch">执行复核</button>
+                <button class="btn danger" id="btnTakeover">人工接管</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-body">
+              <div class="panel-label">Control Center</div>
+              <h2 class="panel-title">中控事件面板</h2>
+
+              <div class="event-card">
+                <div class="event-badge badge-low" id="riskBadge">低风险 · 未触发</div>
+                <h4 id="eventTitle">当前无异常事件</h4>
+                <div class="event-meta">
+                  <div id="eventDesc">等待任务启动</div>
+                  <div id="eventLocation">位置：-</div>
+                  <div id="eventAdvice">建议：-</div>
+                </div>
+              </div>
+
+              <div class="button-grid">
+                <button class="btn primary" id="btnConfirm">人工确认</button>
+                <button class="btn danger" id="btnReset">重置演示</button>
+              </div>
+            </div>
+          </div>
+        </aside>
+
+        <main class="map-stage">
+          <div class="map-shell">
+            <div class="map-toolbar">
+              <div class="map-chip-group">
+                <div class="map-chip">地图模式：园区总览</div>
+                <div class="map-chip">任务：重点区域巡航</div>
+              </div>
+              <div class="map-chip-group">
+                <div class="map-chip" id="phaseChip">阶段：待命</div>
+              </div>
+            </div>
+
+            <div class="zone zone-a" data-label="A-01 办公区"></div>
+            <div class="zone zone-b" id="zoneHot" data-label="A-03 仓储边界"></div>
+            <div class="zone zone-c" data-label="B-02 设备间后场"></div>
+            <div class="zone zone-d" data-label="中控与值守中心"></div>
+
+            <svg class="map-paths" viewBox="0 0 1000 700" aria-hidden="true">
+              <path class="path-base" d="M110 170 C 220 110, 350 130, 520 188 C 655 230, 735 290, 805 390" fill="none" stroke="rgba(103,232,249,0.25)" stroke-width="4" stroke-linecap="round" />
+              <path id="dispatchLine" d="M820 424 C 760 396, 700 346, 600 250" fill="none" stroke="rgba(120,247,181,0.6)" stroke-width="4" stroke-linecap="round" stroke-dasharray="10 10" opacity="0" />
+            </svg>
+
+            <div class="drone" id="drone" style="left: 12%; top: 24%;"></div>
+            <div class="device-label" id="droneLabel" style="left: 12%; top: 24%;">UAS-01<br/>待命</div>
+            <div class="dog" id="dog" style="left: 82%; top: 64%;"></div>
+            <div class="device-label" id="dogLabel" style="left: 82%; top: 64%;">UGV-07<br/>待命</div>
+            <div class="incident" id="incident" style="left: 60%; top: 26%;"></div>
+            <div class="target-box" id="targetBox" style="left: 60%; top: 26%;">
+              <div class="target-tag">疑似人员目标</div>
+            </div>
+
+            <div class="map-legend">
+              <div class="legend-item"><span class="legend-mark" style="background: var(--cyan)"></span> 无人机巡航</div>
+              <div class="legend-item"><span class="legend-mark" style="background: var(--green)"></span> 机器狗复核</div>
+              <div class="legend-item"><span class="legend-mark" style="background: var(--red)"></span> 疑似异常点</div>
+            </div>
+
+            <div class="map-floating-card">
+              <strong id="mapCardTitle">当前园区态势正常</strong>
+              <span id="mapCardDesc">系统待命中，尚未触发异常事件。</span>
+            </div>
+          </div>
+        </main>
+
+        <aside class="control">
+          <div class="panel">
+            <div class="panel-body">
+              <div class="device-tools">
+                <div>
+                  <div class="panel-label">Devices</div>
+                  <h3 class="panel-title" style="margin-bottom:0;">设备列表</h3>
+                </div>
+                <div class="radio-group" id="deviceFilter">
+                  <button class="radio-btn active" data-filter="all">全部</button>
+                  <button class="radio-btn" data-filter="drone">无人机</button>
+                  <button class="radio-btn" data-filter="dog">无人狗</button>
+                </div>
+              </div>
+              <div class="device-status" id="deviceList">
+                <div class="device-item" data-type="drone">
+                  <div class="device-thumb">
+                    <svg viewBox="0 0 48 48" fill="none">
+                      <circle cx="24" cy="24" r="7" fill="#67E8F9"/>
+                      <path d="M24 7L28 17H20L24 7Z" fill="#67E8F9"/>
+                      <path d="M41 24L31 28V20L41 24Z" fill="#67E8F9"/>
+                      <path d="M24 41L20 31H28L24 41Z" fill="#67E8F9"/>
+                      <path d="M7 24L17 20V28L7 24Z" fill="#67E8F9"/>
+                    </svg>
+                  </div>
+                  <div class="device-name">
+                    <strong>无人机 · UAS-01</strong>
+                    <span>位置：A-03 北侧航线</span>
+                    <span>角色：高空广域巡查</span>
+                    <div class="device-meta">
+                      <span class="meta-pill">在线</span>
+                      <span class="meta-pill" id="droneBattery">电量 84%</span>
+                    </div>
+                  </div>
+                  <div class="device-pill status-online" id="droneState">待命</div>
+                </div>
+                <div class="device-item" data-type="drone">
+                  <div class="device-thumb">
+                    <svg viewBox="0 0 48 48" fill="none">
+                      <circle cx="24" cy="24" r="7" fill="#4DA7FF"/>
+                      <path d="M24 7L28 17H20L24 7Z" fill="#4DA7FF"/>
+                      <path d="M41 24L31 28V20L41 24Z" fill="#4DA7FF"/>
+                      <path d="M24 41L20 31H28L24 41Z" fill="#4DA7FF"/>
+                      <path d="M7 24L17 20V28L7 24Z" fill="#4DA7FF"/>
+                    </svg>
+                  </div>
+                  <div class="device-name">
+                    <strong>无人机 · UAS-02</strong>
+                    <span>位置：A-01 待命点</span>
+                    <span>角色：备援巡查</span>
+                    <div class="device-meta">
+                      <span class="meta-pill">在线</span>
+                      <span class="meta-pill">电量 91%</span>
+                    </div>
+                  </div>
+                  <div class="device-pill status-online">待命</div>
+                </div>
+                <div class="device-item" data-type="drone">
+                  <div class="device-thumb">
+                    <svg viewBox="0 0 48 48" fill="none">
+                      <circle cx="24" cy="24" r="7" fill="#45C6FF"/>
+                      <path d="M24 7L28 17H20L24 7Z" fill="#45C6FF"/>
+                      <path d="M41 24L31 28V20L41 24Z" fill="#45C6FF"/>
+                      <path d="M24 41L20 31H28L24 41Z" fill="#45C6FF"/>
+                      <path d="M7 24L17 20V28L7 24Z" fill="#45C6FF"/>
+                    </svg>
+                  </div>
+                  <div class="device-name">
+                    <strong>无人机 · UAS-03</strong>
+                    <span>位置：园区东侧航点</span>
+                    <span>角色：边界巡查</span>
+                    <div class="device-meta">
+                      <span class="meta-pill">在线</span>
+                      <span class="meta-pill">电量 79%</span>
+                    </div>
+                  </div>
+                  <div class="device-pill status-online">待命</div>
+                </div>
+                <div class="device-item" data-type="drone">
+                  <div class="device-thumb">
+                    <svg viewBox="0 0 48 48" fill="none">
+                      <circle cx="24" cy="24" r="7" fill="#33BFFF"/>
+                      <path d="M24 7L28 17H20L24 7Z" fill="#33BFFF"/>
+                      <path d="M41 24L31 28V20L41 24Z" fill="#33BFFF"/>
+                      <path d="M24 41L20 31H28L24 41Z" fill="#33BFFF"/>
+                      <path d="M7 24L17 20V28L7 24Z" fill="#33BFFF"/>
+                    </svg>
+                  </div>
+                  <div class="device-name">
+                    <strong>无人机 · UAS-04</strong>
+                    <span>位置：园区西北待命点</span>
+                    <span>角色：快速支援</span>
+                    <div class="device-meta">
+                      <span class="meta-pill">在线</span>
+                      <span class="meta-pill">电量 68%</span>
+                    </div>
+                  </div>
+                  <div class="device-pill status-online">待命</div>
+                </div>
+                <div class="device-item" data-type="drone">
+                  <div class="device-thumb">
+                    <svg viewBox="0 0 48 48" fill="none">
+                      <circle cx="24" cy="24" r="7" fill="#2FB4F2"/>
+                      <path d="M24 7L28 17H20L24 7Z" fill="#2FB4F2"/>
+                      <path d="M41 24L31 28V20L41 24Z" fill="#2FB4F2"/>
+                      <path d="M24 41L20 31H28L24 41Z" fill="#2FB4F2"/>
+                      <path d="M7 24L17 20V28L7 24Z" fill="#2FB4F2"/>
+                    </svg>
+                  </div>
+                  <div class="device-name">
+                    <strong>无人机 · UAS-05</strong>
+                    <span>位置：中控机库</span>
+                    <span>角色：备援待命</span>
+                    <div class="device-meta">
+                      <span class="meta-pill">在线</span>
+                      <span class="meta-pill">电量 95%</span>
+                    </div>
+                  </div>
+                  <div class="device-pill status-online">待命</div>
+                </div>
+                <div class="device-item" data-type="dog" data-active="true">
+                  <div class="device-thumb">
+                    <svg viewBox="0 0 48 48" fill="none">
+                      <rect x="11" y="18" width="26" height="14" rx="7" fill="#78F7B5"/>
+                      <circle cx="16" cy="35" r="3" fill="#78F7B5"/>
+                      <circle cx="32" cy="35" r="3" fill="#78F7B5"/>
+                      <circle cx="16" cy="15" r="3" fill="#78F7B5"/>
+                      <circle cx="32" cy="15" r="3" fill="#78F7B5"/>
+                    </svg>
+                  </div>
+                  <div class="device-name">
+                    <strong>无人狗 · UGV-07</strong>
+                    <span>位置：中控值守中心</span>
+                    <span>角色：近距复核</span>
+                    <div class="device-meta">
+                      <span class="meta-pill">在线</span>
+                      <span class="meta-pill" id="dogBattery">电量 76%</span>
+                    </div>
+                  </div>
+                  <div class="device-pill status-online" id="dogState">待命</div>
+                </div>
+                <div class="device-item" data-type="dog">
+                  <div class="device-thumb">
+                    <svg viewBox="0 0 48 48" fill="none">
+                      <rect x="11" y="18" width="26" height="14" rx="7" fill="#56D69A"/>
+                      <circle cx="16" cy="35" r="3" fill="#56D69A"/>
+                      <circle cx="32" cy="35" r="3" fill="#56D69A"/>
+                      <circle cx="16" cy="15" r="3" fill="#56D69A"/>
+                      <circle cx="32" cy="15" r="3" fill="#56D69A"/>
+                    </svg>
+                  </div>
+                  <div class="device-name">
+                    <strong>无人狗 · UGV-09</strong>
+                    <span>位置：B-02 设备间后场</span>
+                    <span>角色：备援复核</span>
+                    <div class="device-meta">
+                      <span class="meta-pill">在线</span>
+                      <span class="meta-pill">电量 88%</span>
+                    </div>
+                  </div>
+                  <div class="device-pill status-online">待命</div>
+                </div>
+                <div class="device-item" data-type="dog">
+                  <div class="device-thumb">
+                    <svg viewBox="0 0 48 48" fill="none">
+                      <rect x="11" y="18" width="26" height="14" rx="7" fill="#48DFA8"/>
+                      <circle cx="16" cy="35" r="3" fill="#48DFA8"/>
+                      <circle cx="32" cy="35" r="3" fill="#48DFA8"/>
+                      <circle cx="16" cy="15" r="3" fill="#48DFA8"/>
+                      <circle cx="32" cy="15" r="3" fill="#48DFA8"/>
+                    </svg>
+                  </div>
+                  <div class="device-name">
+                    <strong>无人狗 · UGV-11</strong>
+                    <span>位置：A-01 办公区入口</span>
+                    <span>角色：安保联动</span>
+                    <div class="device-meta">
+                      <span class="meta-pill">在线</span>
+                      <span class="meta-pill">电量 67%</span>
+                    </div>
+                  </div>
+                  <div class="device-pill status-online">待命</div>
+                </div>
+                <div class="device-item" data-type="dog">
+                  <div class="device-thumb">
+                    <svg viewBox="0 0 48 48" fill="none">
+                      <rect x="11" y="18" width="26" height="14" rx="7" fill="#3FD79E"/>
+                      <circle cx="16" cy="35" r="3" fill="#3FD79E"/>
+                      <circle cx="32" cy="35" r="3" fill="#3FD79E"/>
+                      <circle cx="16" cy="15" r="3" fill="#3FD79E"/>
+                      <circle cx="32" cy="15" r="3" fill="#3FD79E"/>
+                    </svg>
+                  </div>
+                  <div class="device-name">
+                    <strong>无人狗 · UGV-12</strong>
+                    <span>位置：园区西南巡检点</span>
+                    <span>角色：夜间巡防</span>
+                    <div class="device-meta">
+                      <span class="meta-pill">在线</span>
+                      <span class="meta-pill">电量 82%</span>
+                    </div>
+                  </div>
+                  <div class="device-pill status-online">待命</div>
+                </div>
+                <div class="device-item" data-type="dog">
+                  <div class="device-thumb">
+                    <svg viewBox="0 0 48 48" fill="none">
+                      <rect x="11" y="18" width="26" height="14" rx="7" fill="#35C88F"/>
+                      <circle cx="16" cy="35" r="3" fill="#35C88F"/>
+                      <circle cx="32" cy="35" r="3" fill="#35C88F"/>
+                      <circle cx="16" cy="15" r="3" fill="#35C88F"/>
+                      <circle cx="32" cy="15" r="3" fill="#35C88F"/>
+                    </svg>
+                  </div>
+                  <div class="device-name">
+                    <strong>无人狗 · UGV-13</strong>
+                    <span>位置：东侧机库待命点</span>
+                    <span>角色：备援复核</span>
+                    <div class="device-meta">
+                      <span class="meta-pill">在线</span>
+                      <span class="meta-pill">电量 74%</span>
+                    </div>
+                  </div>
+                  <div class="device-pill status-online">待命</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </aside>
+      </section>
+
+      <section class="timeline-wrap">
+        <div class="timeline">
+          <div class="step active" id="step-0">
+            <div class="step-index">Step 00</div>
+            <strong>待命</strong>
+          </div>
+          <div class="step" id="step-1">
+            <div class="step-index">Step 01</div>
+            <strong>巡航中</strong>
+          </div>
+          <div class="step" id="step-2">
+            <div class="step-index">Step 02</div>
+            <strong>发现异常</strong>
+          </div>
+          <div class="step" id="step-3">
+            <div class="step-index">Step 03</div>
+            <strong>调度复核</strong>
+          </div>
+          <div class="step" id="step-4">
+            <div class="step-index">Step 04</div>
+            <strong>待人工确认</strong>
+          </div>
+          <div class="step" id="step-5">
+            <div class="step-index">Step 05</div>
+            <strong>完成确认</strong>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <script>
+    const state = {
+      stage: 0,
+      mission: '待命',
+      risk: '低风险',
+      drone: '待命',
+      dog: '待命'
+    };
+
+    const els = {
+      topMission: document.getElementById('topMission'),
+      topRisk: document.getElementById('topRisk'),
+      phaseChip: document.getElementById('phaseChip'),
+      riskBadge: document.getElementById('riskBadge'),
+      eventTitle: document.getElementById('eventTitle'),
+      eventDesc: document.getElementById('eventDesc'),
+      eventLocation: document.getElementById('eventLocation'),
+      eventAdvice: document.getElementById('eventAdvice'),
+      droneState: document.getElementById('droneState'),
+      dogState: document.getElementById('dogState'),
+      droneBattery: document.getElementById('droneBattery'),
+      dogBattery: document.getElementById('dogBattery'),
+      deviceFilter: document.getElementById('deviceFilter'),
+      deviceItems: [...document.querySelectorAll('#deviceList .device-item')],
+      incident: document.getElementById('incident'),
+      targetBox: document.getElementById('targetBox'),
+      zoneHot: document.getElementById('zoneHot'),
+      drone: document.getElementById('drone'),
+      droneLabel: document.getElementById('droneLabel'),
+      dog: document.getElementById('dog'),
+      dogLabel: document.getElementById('dogLabel'),
+      mapCardTitle: document.getElementById('mapCardTitle'),
+      mapCardDesc: document.getElementById('mapCardDesc'),
+      dispatchLine: document.getElementById('dispatchLine')
+    };
+
+    const stepTitles = ['待命', '巡航中', '发现异常', '调度复核', '待人工确认', '完成确认'];
+
+    function setStep(step) {
+      state.stage = step;
+      for (let i = 0; i <= 5; i++) {
+        const el = document.getElementById(`step-${i}`);
+        el.classList.remove('active', 'done');
+        if (i < step) el.classList.add('done');
+        if (i === step) el.classList.add('active');
+      }
+      els.phaseChip.textContent = `阶段：${stepTitles[step]}`;
+    }
+
+    function render() {
+      els.topMission.textContent = `任务状态：${state.mission}`;
+      els.topRisk.textContent = `风险等级：${state.risk}`;
+      els.droneState.textContent = state.drone;
+      els.dogState.textContent = state.dog;
+      els.droneLabel.innerHTML = `UAS-01<br/>${state.drone}`;
+      els.dogLabel.innerHTML = `UGV-07<br/>${state.dog}`;
+      els.droneState.className = 'device-pill ' + (state.risk === '中风险' && state.drone === '目标锁定' ? 'status-alert' : state.drone === '巡航中' || state.drone === '持续跟踪' ? 'status-busy' : 'status-online');
+      els.dogState.className = 'device-pill ' + (state.dog === '前往复核' || state.dog === '近距侦查' ? 'status-busy' : state.dog === '停止自动推进' ? 'status-alert' : 'status-online');
+    }
+
+    function startPatrol() {
+      setStep(1);
+      state.mission = '巡航中';
+      state.risk = '低风险';
+      state.drone = '巡航中';
+      state.dog = '待命';
+      els.incident.style.opacity = '0';
+      els.targetBox.style.opacity = '0';
+      els.zoneHot.classList.remove('hot');
+      els.dispatchLine.style.opacity = '0';
+      els.drone.style.left = '52%';
+      els.drone.style.top = '28%';
+      els.droneLabel.style.left = '52%';
+      els.droneLabel.style.top = '28%';
+      els.dog.style.left = '82%';
+      els.dog.style.top = '64%';
+      els.dogLabel.style.left = '82%';
+      els.dogLabel.style.top = '64%';
+      els.mapCardTitle.textContent = '无人机执行常规巡航';
+      els.mapCardDesc.textContent = 'UAS-01 正在对 A-03 重点区域执行高空广域巡查，系统未发现异常。';
+
+      els.riskBadge.className = 'event-badge badge-low';
+      els.riskBadge.textContent = '低风险 · 巡航中';
+      els.eventTitle.textContent = '无人机正在执行重点区域巡航';
+      els.eventDesc.textContent = 'UAS-01 巡航中';
+      els.eventLocation.textContent = '位置：园区重点区域 A-03';
+      els.eventAdvice.textContent = '建议：等待异常事件';
+      render();
+    }
+
+    function triggerAlert() {
+      if (state.stage < 1) startPatrol();
+      setStep(2);
+      state.mission = '发现异常';
+      state.risk = '中风险';
+      state.drone = '目标锁定';
+      state.dog = '待命';
+      els.incident.style.opacity = '1';
+      els.targetBox.style.opacity = '1';
+      els.zoneHot.classList.add('hot');
+      els.drone.style.left = '60%';
+      els.drone.style.top = '26%';
+      els.droneLabel.style.left = '60%';
+      els.droneLabel.style.top = '26%';
+      els.mapCardTitle.textContent = '检测到疑似入侵目标';
+      els.mapCardDesc.textContent = 'A-03 仓储边界出现异常热区，系统已完成初步风险判定并等待复核。';
+
+      els.riskBadge.className = 'event-badge badge-mid';
+      els.riskBadge.textContent = '中风险 · 疑似入侵';
+      els.eventTitle.textContent = '发现疑似人员目标';
+      els.eventDesc.textContent = '识别疑似人员目标';
+      els.eventLocation.textContent = '位置：A-03 仓储边界重点监控区';
+      els.eventAdvice.textContent = '建议：执行复核';
+      render();
+    }
+
+    function dispatchDog() {
+      if (state.stage < 2) triggerAlert();
+      setStep(3);
+      state.mission = '复核中';
+      state.risk = '中风险';
+      state.drone = '目标锁定';
+      state.dog = '前往复核';
+      els.dispatchLine.style.opacity = '1';
+      els.dog.style.left = '68%';
+      els.dog.style.top = '42%';
+      els.dogLabel.style.left = '68%';
+      els.dogLabel.style.top = '42%';
+      els.mapCardTitle.textContent = '地面复核设备已出动';
+      els.mapCardDesc.textContent = '系统已调度 UGV-07 沿最短路径前往目标区域，准备近距复核。';
+      els.dogBattery.textContent = '电量 73%';
+
+      els.riskBadge.className = 'event-badge badge-mid';
+      els.riskBadge.textContent = '中风险 · 复核执行中';
+      els.eventTitle.textContent = '机器狗已被调度前往复核';
+      els.eventDesc.textContent = 'UGV-07 已前往复核';
+      els.eventLocation.textContent = '路径：中控出发 -> A-03 仓储边界';
+      els.eventAdvice.textContent = '建议：等待复核结果';
+      render();
+
+      setTimeout(() => {
+        if (state.stage === 3) {
+          setStep(4);
+          state.mission = '待人工确认';
+          state.risk = '中风险';
+          state.dog = '近距侦查';
+          els.dog.style.left = '60%';
+          els.dog.style.top = '31%';
+          els.dogLabel.style.left = '60%';
+          els.dogLabel.style.top = '31%';
+          els.mapCardTitle.textContent = '近距复核结果已回传';
+          els.mapCardDesc.textContent = 'UGV-07 已到达异常点附近并回传近距画面，等待中控确认。';
+          els.dogBattery.textContent = '电量 71%';
+          els.riskBadge.className = 'event-badge badge-mid';
+          els.riskBadge.textContent = '中风险 · 待人工确认';
+          els.eventTitle.textContent = '复核结果已回传中控';
+          els.eventDesc.textContent = '近距画面已回传';
+          els.eventLocation.textContent = '位置：A-03 仓储边界异常点附近';
+          els.eventAdvice.textContent = '建议：人工确认';
+          render();
+        }
+      }, 1300);
+    }
+
+    function confirmEvent() {
+      if (state.stage < 4) return;
+      setStep(5);
+      state.mission = '已确认';
+      state.risk = '高风险';
+      state.drone = '持续跟踪';
+      state.dog = '近距侦查';
+      els.mapCardTitle.textContent = '事件已人工确认';
+      els.mapCardDesc.textContent = '中控已确认异常事件，系统保持空地持续跟踪，并通知值守安保人员到场。';
+
+      els.riskBadge.className = 'event-badge badge-high';
+      els.riskBadge.textContent = '高风险 · 已人工确认';
+      els.eventTitle.textContent = '中控已确认事件并升级处置';
+      els.eventDesc.textContent = '事件已升级处置';
+      els.eventLocation.textContent = '处置：已通知值守安保人员到场';
+      els.eventAdvice.textContent = '建议：持续跟踪';
+      render();
+    }
+
+    function takeover() {
+      setStep(Math.max(state.stage, 4));
+      state.mission = '人工接管中';
+      state.risk = state.stage >= 2 ? '中风险' : '低风险';
+      state.drone = state.stage >= 2 ? '持续跟踪' : '待命';
+      state.dog = state.stage >= 3 ? '停止自动推进' : '待命';
+      els.mapCardTitle.textContent = '系统进入人工接管模式';
+      els.mapCardDesc.textContent = '自动调度已停止，地图和设备状态仍保留，由中控和值守人员继续推进后续处置。';
+
+      els.riskBadge.className = 'event-badge badge-mid';
+      els.riskBadge.textContent = '人工接管 · 安全模式';
+      els.eventTitle.textContent = '系统已切换为人工接管模式';
+      els.eventDesc.textContent = '自动流程已停止';
+      els.eventLocation.textContent = '状态：保留地图与设备状态，停止自动推进';
+      els.eventAdvice.textContent = '建议：人工处置';
+      render();
+    }
+
+    function resetDemo() {
+      setStep(0);
+      state.mission = '待命';
+      state.risk = '低风险';
+      state.drone = '待命';
+      state.dog = '待命';
+
+      els.incident.style.opacity = '0';
+      els.targetBox.style.opacity = '0';
+      els.zoneHot.classList.remove('hot');
+      els.dispatchLine.style.opacity = '0';
+      els.drone.style.left = '12%';
+      els.drone.style.top = '24%';
+      els.droneLabel.style.left = '12%';
+      els.droneLabel.style.top = '24%';
+      els.dog.style.left = '82%';
+      els.dog.style.top = '64%';
+      els.dogLabel.style.left = '82%';
+      els.dogLabel.style.top = '64%';
+      els.mapCardTitle.textContent = '当前园区态势正常';
+      els.mapCardDesc.textContent = '系统待命中，尚未触发异常事件。';
+      els.droneBattery.textContent = '电量 84%';
+      els.dogBattery.textContent = '电量 76%';
+
+      els.riskBadge.className = 'event-badge badge-low';
+      els.riskBadge.textContent = '低风险 · 未触发';
+      els.eventTitle.textContent = '当前无异常事件';
+      els.eventDesc.textContent = '等待任务启动';
+      els.eventLocation.textContent = '位置：-';
+      els.eventAdvice.textContent = '建议：-';
+      render();
+    }
+
+    document.getElementById('btnStart').addEventListener('click', startPatrol);
+    document.getElementById('btnAlert').addEventListener('click', triggerAlert);
+    document.getElementById('btnDispatch').addEventListener('click', dispatchDog);
+    document.getElementById('btnConfirm').addEventListener('click', confirmEvent);
+    document.getElementById('btnTakeover').addEventListener('click', takeover);
+    document.getElementById('btnReset').addEventListener('click', resetDemo);
+
+    els.deviceFilter.addEventListener('click', (event) => {
+      const button = event.target.closest('.radio-btn');
+      if (!button) return;
+      const filter = button.dataset.filter;
+      [...els.deviceFilter.querySelectorAll('.radio-btn')].forEach(btn => {
+        btn.classList.toggle('active', btn === button);
+      });
+      els.deviceItems.forEach(item => {
+        const visible = filter === 'all' || item.dataset.type === filter;
+        item.style.display = visible ? 'grid' : 'none';
+      });
+    });
+
+    resetDemo();
+  </script>
+</body>
+</html>
